@@ -51,6 +51,8 @@
 #include <StopWatch.h>
 #include <avdweb_Switch.h>
 
+#define DEBUG 1
+
 enum States 
 {
   Init,
@@ -95,10 +97,13 @@ void AnimationFrameToTLC(int animationFrame, int startChannel)
         channel = channel - NUM_LIGHTS;
 
       Tlc.set(channel, value);
+
+#ifdef DEBUG      
       Serial.print("Kanal: ");
       Serial.print(channel);
       Serial.print(", värde: ");
       Serial.println(value);
+#endif      
     }
 
     Tlc.update();
@@ -134,11 +139,12 @@ bool Shine()
   {
       if (fps.isNext())
       {
+#ifdef DEBUG
           Serial.print("frame no. = ");
           Serial.print(fps.frame());
           Serial.print(", time = ");
           Serial.println(fps.ms());
-
+#endif
           RotateLights();
       }
   }
@@ -210,8 +216,10 @@ void loop()
       currentState = Waiting;
       break;
     case Waiting:
+#ifdef DEBUG    
       Serial.print("Waiting: ");
       Serial.println(stopwatch.sec());
+#endif
 
       if(stopwatch.sec() > interval || button.singleClick())
       {
