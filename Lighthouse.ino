@@ -59,7 +59,13 @@ enum States
 };
 
 States currentState = Init;
+const int FIRST_LIGHT_TLC_POSITON = 4;  // index to first light in TLC
 const int NUM_LIGHTS = 8;
+
+const int SHORT_INTERVAL = 30;
+const int LONG_INTERVAL = 5 * 60;
+bool useShortInterval = true;
+int interval = SHORT_INTERVAL;
 
 FrameRateCounter fps(3);
 StopWatch stopwatch;
@@ -67,7 +73,7 @@ Switch button(A1); // = new Switch(A1);
 
 void RotateLights()
 {
-    static int startChannel = 4;
+    static int startChannel = FIRST_LIGHT_TLC_POSITON;
 
     Tlc.clear();
 
@@ -76,7 +82,7 @@ void RotateLights()
     startChannel++;
 
     if(startChannel > 11)
-      startChannel = 4; 
+      startChannel = FIRST_LIGHT_TLC_POSITON; 
 
     /* Tlc.update() sends the data to the TLCs.  This is when the LEDs will
        actually change. */
@@ -106,6 +112,36 @@ bool Shine()
   return fps.count() < (NUM_LIGHTS * 10); // 10 varv
 }
 
+void ChangeInterval()
+{
+  useShortInterval = !useShortInterval;
+  interval = useShortInterval ? SHORT_INTERVAL : LONG_INTERVAL;
+}
+
+void SetAllLights(bool on)
+{
+    int value = on ? 4095 : 0;
+    Tlc.clear();
+
+    for(int i = FIRST_LIGHT_TLC_POSITON; i < FIRST_LIGHT_TLC_POSITON + NUM_LIGHTS; i++)
+    {
+      Tlc.set(i, value);
+    }
+
+    Tlc.update();
+}
+
+void BlinkLights()
+{
+  SetAllLights(true);
+  delay(200);
+  SetAllLights(false);
+  delay(300);
+  SetAllLights(true);
+  delay(200);
+  SetAllLights(false);
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -123,8 +159,12 @@ void loop()
 {
   //Serial.write("loop: ");
   button.poll();
-  if(button.pushed())
-    Serial.println("tryckt på knappen");
+  if(button.longPress())
+  {
+    Serial.println("byt intervall");
+    ChangeInterval();
+    BlinkLights();
+  }
 
   switch(currentState)
   {
@@ -136,7 +176,7 @@ void loop()
     case Waiting:
       Serial.println("Waiting");
 
-      if(stopwatch.sec() > 10 || button.singleClick())
+      if(stopwatch.sec() > interval || button.singleClick())
       {
         stopwatch.stop();
         fps.restart();
