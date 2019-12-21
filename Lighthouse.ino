@@ -61,32 +61,66 @@ enum States
 States currentState = Init;
 const int FIRST_LIGHT_TLC_POSITON = 4;  // index to first light in TLC
 const int NUM_LIGHTS = 8;
+const int LAST_LIGHT_TLC_POSITON = FIRST_LIGHT_TLC_POSITON + NUM_LIGHTS - 1;  // index to last light in TLC
 
 const int SHORT_INTERVAL = 30;
 const int LONG_INTERVAL = 5 * 60;
 bool useShortInterval = true;
 int interval = SHORT_INTERVAL;
 
-FrameRateCounter fps(3);
+FrameRateCounter fps(12);
 StopWatch stopwatch;
 Switch button(A1); // = new Switch(A1);
+
+const int ANIMATION_MAX_VALUE = 4095;
+const int ANIMATION_FRAMES = 5;
+const int ANIMATION_LENGTH = 4;
+int lightAnimation[ANIMATION_FRAMES][ANIMATION_LENGTH] = {
+    { 0.2 * ANIMATION_MAX_VALUE, 1.0 * ANIMATION_MAX_VALUE, 0.2 * ANIMATION_MAX_VALUE, 0.0 * ANIMATION_MAX_VALUE },
+    { 0.2 * ANIMATION_MAX_VALUE, 0.9 * ANIMATION_MAX_VALUE, 0.3 * ANIMATION_MAX_VALUE, 0.0 * ANIMATION_MAX_VALUE },
+    { 0.1 * ANIMATION_MAX_VALUE, 0.8 * ANIMATION_MAX_VALUE, 0.7 * ANIMATION_MAX_VALUE, 0.1 * ANIMATION_MAX_VALUE },
+    { 0.1 * ANIMATION_MAX_VALUE, 0.2 * ANIMATION_MAX_VALUE, 0.8 * ANIMATION_MAX_VALUE, 0.1 * ANIMATION_MAX_VALUE },
+    { 0.0 * ANIMATION_MAX_VALUE, 0.2 * ANIMATION_MAX_VALUE, 1.0 * ANIMATION_MAX_VALUE, 0.1 * ANIMATION_MAX_VALUE },
+};
+
+void AnimationFrameToTLC(int animationFrame, int startChannel)
+{
+    Tlc.clear();
+
+    for(int animPos=0; animPos < ANIMATION_LENGTH; animPos++)
+    {
+      int value = lightAnimation[animationFrame][animPos];
+      int channel = startChannel + animPos;
+      if(channel > LAST_LIGHT_TLC_POSITON)
+        channel = channel - NUM_LIGHTS;
+
+      Tlc.set(channel, value);
+      Serial.print("Kanal: ");
+      Serial.print(channel);
+      Serial.print(", värde: ");
+      Serial.println(value);
+    }
+
+    Tlc.update();
+}
 
 void RotateLights()
 {
     static int startChannel = FIRST_LIGHT_TLC_POSITON;
+    static int animationFrame = 0;
 
-    Tlc.clear();
+    AnimationFrameToTLC(animationFrame, startChannel);
 
-    Tlc.set(startChannel, 4095);
+    animationFrame++;
+    if(animationFrame>=ANIMATION_FRAMES)
+    {
+      animationFrame = 0;
+    
+      startChannel++;
 
-    startChannel++;
-
-    if(startChannel > 11)
-      startChannel = FIRST_LIGHT_TLC_POSITON; 
-
-    /* Tlc.update() sends the data to the TLCs.  This is when the LEDs will
-       actually change. */
-    Tlc.update();
+      if(startChannel > LAST_LIGHT_TLC_POSITON)
+        startChannel = FIRST_LIGHT_TLC_POSITON; 
+    }
 }
 
 bool Shine()
@@ -164,6 +198,8 @@ void loop()
     Serial.println("byt intervall");
     ChangeInterval();
     BlinkLights();
+    Serial.print("Nytt intervall: ");
+    Serial.println(interval);
   }
 
   switch(currentState)
@@ -174,7 +210,8 @@ void loop()
       currentState = Waiting;
       break;
     case Waiting:
-      Serial.println("Waiting");
+      Serial.print("Waiting: ");
+      Serial.println(stopwatch.sec());
 
       if(stopwatch.sec() > interval || button.singleClick())
       {
@@ -187,7 +224,11 @@ void loop()
     case Shining:
       //Serial.println("Shining");
       if(!Shine())
+      {
         currentState = Init;
+        Serial.println("Turn off all lights before INIT-state");
+        SetAllLights(false);
+      }
       break;
   }
 }
