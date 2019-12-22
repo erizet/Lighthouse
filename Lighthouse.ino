@@ -67,8 +67,8 @@ const int LAST_LIGHT_TLC_POSITON = FIRST_LIGHT_TLC_POSITON + NUM_LIGHTS - 1;  //
 
 const int SHORT_INTERVAL = 30;
 const int LONG_INTERVAL = 5 * 60;
-bool useShortInterval = true;
-int interval = SHORT_INTERVAL;
+bool useShortInterval = false;
+int interval = LONG_INTERVAL;
 
 FrameRateCounter fps(120);
 StopWatch stopwatch;
@@ -270,6 +270,7 @@ void loop()
       {
         currentState = Init;
         Serial.println("Turn off all lights before INIT-state");
+        delay(100);
         SetAllLights(false);
       }
       break;
