@@ -51,7 +51,7 @@
 #include <StopWatch.h>
 #include <avdweb_Switch.h>
 
-#define DEBUG 1
+//#define DEBUG 0
 
 enum States 
 {
@@ -70,19 +70,54 @@ const int LONG_INTERVAL = 5 * 60;
 bool useShortInterval = true;
 int interval = SHORT_INTERVAL;
 
-FrameRateCounter fps(12);
+FrameRateCounter fps(120);
 StopWatch stopwatch;
 Switch button(A1); // = new Switch(A1);
 
 const int ANIMATION_MAX_VALUE = 4095;
-const int ANIMATION_FRAMES = 5;
+const int ANIMATION_FRAMES = 40;
 const int ANIMATION_LENGTH = 4;
 int lightAnimation[ANIMATION_FRAMES][ANIMATION_LENGTH] = {
-    { 0.2 * ANIMATION_MAX_VALUE, 1.0 * ANIMATION_MAX_VALUE, 0.2 * ANIMATION_MAX_VALUE, 0.0 * ANIMATION_MAX_VALUE },
-    { 0.2 * ANIMATION_MAX_VALUE, 0.9 * ANIMATION_MAX_VALUE, 0.3 * ANIMATION_MAX_VALUE, 0.0 * ANIMATION_MAX_VALUE },
-    { 0.1 * ANIMATION_MAX_VALUE, 0.8 * ANIMATION_MAX_VALUE, 0.7 * ANIMATION_MAX_VALUE, 0.1 * ANIMATION_MAX_VALUE },
-    { 0.1 * ANIMATION_MAX_VALUE, 0.2 * ANIMATION_MAX_VALUE, 0.8 * ANIMATION_MAX_VALUE, 0.1 * ANIMATION_MAX_VALUE },
-    { 0.0 * ANIMATION_MAX_VALUE, 0.2 * ANIMATION_MAX_VALUE, 1.0 * ANIMATION_MAX_VALUE, 0.1 * ANIMATION_MAX_VALUE },
+{ 819,  4095, 819,  0,  },
+{ 799,  4014, 859,  20, },
+{ 779,  3933, 899,  40, },
+{ 759,  3852, 939,  60, },
+{ 739,  3771, 979,  80, },
+{ 719,  3690, 1019, 100,  },
+{ 699,  3609, 1059, 120,  },
+{ 679,  3528, 1099, 140,  },
+{ 659,  3447, 1139, 160,  },
+{ 639,  3366, 1179, 180,  },
+{ 614,  3276, 1228, 204,  },
+{ 594,  3235, 1391, 224,  },
+{ 574,  3194, 1554, 244,  },
+{ 554,  3153, 1717, 264,  },
+{ 534,  3112, 1880, 284,  },
+{ 514,  3071, 2043, 304,  },
+{ 494,  3030, 2206, 324,  },
+{ 474,  2989, 2369, 344,  },
+{ 454,  2948, 2532, 364,  },
+{ 434,  2907, 2695, 384,  },
+{ 409,  2866, 2866, 409,  },
+{ 389,  2703, 2907, 429,  },
+{ 369,  2540, 2948, 449,  },
+{ 349,  2377, 2989, 469,  },
+{ 329,  2214, 3030, 489,  },
+{ 309,  2051, 3071, 509,  },
+{ 289,  1888, 3112, 529,  },
+{ 269,  1725, 3153, 549,  },
+{ 249,  1562, 3194, 569,  },
+{ 229,  1399, 3235, 589,  },
+{ 204,  1228, 3276, 614,  },
+{ 184,  1188, 3357, 634,  },
+{ 164,  1148, 3438, 654,  },
+{ 144,  1108, 3519, 674,  },
+{ 124,  1068, 3600, 694,  },
+{ 104,  1028, 3681, 714,  },
+{ 84, 988,  3762, 734,  },
+{ 64, 948,  3843, 754,  },
+{ 44, 908,  3924, 774,  },
+{ 24, 868,  4005, 794,  }
 };
 
 void AnimationFrameToTLC(int animationFrame, int startChannel)
@@ -95,7 +130,7 @@ void AnimationFrameToTLC(int animationFrame, int startChannel)
       int channel = startChannel + animPos;
       if(channel > LAST_LIGHT_TLC_POSITON)
         channel = channel - NUM_LIGHTS;
-
+ 
       Tlc.set(channel, value);
 
 #ifdef DEBUG      
@@ -149,7 +184,7 @@ bool Shine()
       }
   }
 
-  return fps.count() < (NUM_LIGHTS * 10); // 10 varv
+  return fps.count() < (NUM_LIGHTS * ANIMATION_FRAMES * 10); // 10 varv
 }
 
 void ChangeInterval()
